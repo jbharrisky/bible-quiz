@@ -68,10 +68,34 @@ function renderQuestion() {
 }
 
 quizEl.addEventListener("change", (e) => {
-  if(e.target.name === `q${currentIndex}`){
+  if (e.target.name === `q${currentIndex}`) {
     answers[currentIndex] = e.target.value;
+
+    const q = QUESTIONS[currentIndex];
+    const feedbackEl = document.getElementById("feedback");
+
+    // Lock all choices after selection
+    document.querySelectorAll(`input[name="q${currentIndex}"]`).forEach(input => {
+      input.disabled = true;
+    });
+
+    if (answers[currentIndex] === q.correct) {
+      // Correct answer → no explanation needed
+      feedbackEl.style.display = "block";
+      feedbackEl.innerHTML = `<strong>Correct!</strong>`;
+    } else {
+      // Wrong answer → show explanation
+      feedbackEl.style.display = "block";
+      feedbackEl.innerHTML = `
+        <strong>Incorrect.</strong><br>
+        <strong>Correct Answer:</strong> ${q.correct}<br>
+        <p>${q.explanation || ""}</p>
+        ${q.images.map(img => `<img src="${img}" alt="image for question">`).join("")}
+      `;
+    }
   }
 });
+
 
 nextBtn.addEventListener("click", () => {
   if(currentIndex === QUESTIONS.length-1){
