@@ -49,20 +49,21 @@
 
       rows.shift(); // remove headers
 
-      QUESTIONS = rows.map(r => {
-        const q = {
-          text: r[0],
-          correct: r[1],
-          wrongs: [r[2], r[3], r[4]],
-          category: r[5],
-          explanation: r[6],
-          images: [r[7], r[8], r[9]].filter(Boolean)
-        };
+     QUESTIONS = rows.map(r => {
+  const q = {
+    id: r[0],  // keep ID if you need it
+    text: r[1], 
+    correct: r[2],
+    wrongs: [r[3], r[4], r[5]],
+    category: r[6],
+    explanation: r[7],
+    images: [r[8], r[9], r[10]].filter(Boolean)
+  };
 
         // Combine correct + wrong answers and shuffle them
         q.choices = [q.correct, ...q.wrongs].sort(() => Math.random() - 0.5);
-        return q;
-      });
+  return q;
+});
 
       answers = new Array(QUESTIONS.length).fill(null);
       renderQuestion();
@@ -138,3 +139,4 @@
   </script>
 </body>
 </html>
+
