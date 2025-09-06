@@ -9,6 +9,15 @@ const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
 const resultEl = document.getElementById("result");
 
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+
 async function loadQuestions() {
   const res = await fetch(url);
   const text = await res.text();
@@ -16,7 +25,8 @@ async function loadQuestions() {
 
   rows.shift(); // remove headers
 
-  QUESTIONS = rows.map(r => {
+ QUESTIONS = shuffle(
+  rows.map(r => {
     const q = {
       id: r[0],
       text: r[1],
@@ -27,9 +37,12 @@ async function loadQuestions() {
       images: [r[8], r[9], r[10]].filter(Boolean)
     };
 
-    // Combine correct + wrong answers and shuffle them
-    q.choices = [q.correct, ...q.wrongs].sort(() => Math.random() - 0.5);
+    // Shuffle the answer choices
+    q.choices = shuffle([q.correct, ...q.wrongs]);
     return q;
+  })
+);
+
   });
 
   answers = new Array(QUESTIONS.length).fill(null);
