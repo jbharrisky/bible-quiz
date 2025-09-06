@@ -1,4 +1,4 @@
-const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTGWgTvf3kg9QYY_uwOSUrrXayVQ5dKUJFvnTVN3cEKwLx7LBxdT2GhlEhyMqxwZnaRc78jvaZ3DWzH/pub?output=csv"; // 🔹 Replace with your sheet link
+const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTGWgTvf3kg9QYY_uwOSUrrXayVQ5dKUJFvnTVN3cEKwLx7LBxdT2GhlEhyMqxwZnaRc78jvaZ3DWzH/pub?output=csv"; 
 
 let QUESTIONS = [];
 let currentIndex = 0;
@@ -17,7 +17,6 @@ function shuffle(array) {
   return array;
 }
 
-
 async function loadQuestions() {
   const res = await fetch(url);
   const text = await res.text();
@@ -25,25 +24,23 @@ async function loadQuestions() {
 
   rows.shift(); // remove headers
 
- QUESTIONS = shuffle(
-  rows.map(r => {
-    const q = {
-      id: r[0],
-      text: r[1],
-      correct: r[2],
-      wrongs: [r[3], r[4], r[5]],
-      category: r[6],
-      explanation: r[7],
-      images: [r[8], r[9], r[10]].filter(Boolean)
-    };
+  QUESTIONS = shuffle(
+    rows.map(r => {
+      const q = {
+        id: r[0],
+        text: r[1],
+        correct: r[2],
+        wrongs: [r[3], r[4], r[5]],
+        category: r[6],
+        explanation: r[7],
+        images: [r[8], r[9], r[10]].filter(Boolean)
+      };
 
-    // Shuffle the answer choices
-    q.choices = shuffle([q.correct, ...q.wrongs]);
-    return q;
-  })
-);
-
-  });
+      // Shuffle the answer choices
+      q.choices = shuffle([q.correct, ...q.wrongs]);
+      return q;
+    })
+  );
 
   answers = new Array(QUESTIONS.length).fill(null);
   renderQuestion();
@@ -62,9 +59,14 @@ function renderQuestion() {
         </label>
       `).join("")}
     </div>
+    <div id="feedback" class="explanation" style="display:none;"></div>
   `;
+
   prevBtn.disabled = currentIndex === 0;
   nextBtn.textContent = currentIndex === QUESTIONS.length-1 ? "Submit" : "Next";
+
+  // Disable Next if no answer yet
+  nextBtn.disabled = answers[currentIndex] === null;
 }
 
 quizEl.addEventListener("change", (e) => {
@@ -80,11 +82,9 @@ quizEl.addEventListener("change", (e) => {
     });
 
     if (answers[currentIndex] === q.correct) {
-      // Correct answer → no explanation needed
       feedbackEl.style.display = "block";
       feedbackEl.innerHTML = `<strong>Correct!</strong>`;
     } else {
-      // Wrong answer → show explanation
       feedbackEl.style.display = "block";
       feedbackEl.innerHTML = `
         <strong>Incorrect.</strong><br>
@@ -93,12 +93,14 @@ quizEl.addEventListener("change", (e) => {
         ${q.images.map(img => `<img src="${img}" alt="image for question">`).join("")}
       `;
     }
+
+    // Enable Next once an answer is chosen
+    nextBtn.disabled = false;
   }
 });
 
-
 nextBtn.addEventListener("click", () => {
-  if(currentIndex === QUESTIONS.length-1){
+  if (currentIndex === QUESTIONS.length-1) {
     showResult();
   } else {
     currentIndex++;
@@ -107,7 +109,7 @@ nextBtn.addEventListener("click", () => {
 });
 
 prevBtn.addEventListener("click", () => {
-  if(currentIndex > 0){
+  if (currentIndex > 0) {
     currentIndex--;
     renderQuestion();
   }
