@@ -1,3 +1,5 @@
+console.log("✅ script.js loaded");
+
 const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTGWgTvf3kg9QYY_uwOSUrrXayVQ5dKUJFvnTVN3cEKwLx7LBxdT2GhlEhyMqxwZnaRc78jvaZ3DWzH/export?format=csv"; 
 
 let QUESTIONS = [];
