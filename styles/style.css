@@ -1,86 +1,63 @@
 body {
-  font-family: Arial, sans-serif;
-  background: #f4f6fa;
-  margin: 0;
-  padding: 20px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  line-height: 1.5;
 }
 
-.container {
-  background: #fff;
-  padding: 20px;
-  max-width: 700px;
-  margin: auto;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+#quiz {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
 }
 
 h1 {
   margin-top: 0;
 }
 
-.question {
-  font-weight: bold;
-  margin-bottom: 12px;
+.meta {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-bottom: 0.75rem;
 }
 
-.choices label {
+label {
   display: block;
-  margin: 6px 0;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  margin: 0.35rem 0;
   cursor: pointer;
-}
-
-.navigation {
-  margin-top: 20px;
-  display: flex;
-  justify-content: space-between;
 }
 
 button {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 6px;
+  margin: 0.5rem 0.25rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
   cursor: pointer;
-  font-weight: bold;
 }
 
 button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  opacity: 0.5;
+  cursor: default;
 }
 
-.btn-primary {
-  background: #2563eb;
-  color: white;
+#result {
+  margin-top: 1rem;
+  font-weight: bold;
 }
 
-.btn-secondary {
-  background: #e5e7eb;
+#explanation {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  padding: 0.5rem;
+  border-left: 4px solid #ddd;
+  background: #fafafa;
 }
 
-.result,
-.explanation {
-  margin-top: 20px;
-  padding: 15px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 8px;
-  display: none;
-}
-
-img {
+.images img {
   max-width: 100%;
-  margin-top: 10px;
-  border-radius: 8px;
-}
-
-.explanation {
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  border-left: 4px solid #007bff;
-  font-size: 0.95em;
+  max-height: 200px;
+  margin: 0.5rem 0.5rem 0 0;
+  border-radius: 4px;
+  border: 1px solid #ddd;
 }

@@ -1,22 +1,35 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8" />
   <title>Bible Quiz</title>
-  <link rel="stylesheet" href="style.css">
+
+  <!-- Link to external CSS -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- PapaParse for CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>Bible Quiz App</h1>
-    <div id="quiz">Loading questions...</div>
-    <div class="navigation">
-      <button id="prevBtn" class="btn-secondary">Previous</button>
-      <button id="nextBtn" class="btn-primary">Next</button>
+  <h1>Bible Quiz</h1>
+
+  <div id="quiz">
+    <div class="meta" id="meta"></div>
+    <h2 id="questionText">Loading questions…</h2>
+    <div id="options"></div>
+
+    <div>
+      <button id="prevBtn">Previous</button>
+      <button id="nextBtn">Next</button>
+      <button id="submitBtn">Submit Quiz</button>
     </div>
-    <div id="result" class="result"></div>
+
+    <div id="result"></div>
+    <div id="explanation"></div>
+    <div class="images" id="images"></div>
   </div>
 
-  <script src="script.js"></script>
+  <!-- Your main script -->
+  <script src="scripts/script.js"></script>
 </body>
 </html>

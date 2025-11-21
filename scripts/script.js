@@ -1,15 +1,21 @@
-console.log("✅ script.js loaded");
+// 👉 Replace this with your actual published CSV URL:
 
-const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTGWgTvf3kg9QYY_uwOSUrrXayVQ5dKUJFvnTVN3cEKwLx7LBxdT2GhlEhyMqxwZnaRc78jvaZ3DWzH/export?format=csv"; 
+
+const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTGWgTvf3kg9QYY_uwOSUrrXayVQ5dKUJFvnTVN3cEKwLx7LBxdT2GhlEhyMqxwZnaRc78jvaZ3DWzH/pub?output=csv";
 
 let QUESTIONS = [];
 let currentIndex = 0;
-let answers = [];
+let answers = {}; // { [ID]: selectedText }
 
-const quizEl = document.getElementById("quiz");
+const questionTextEl = document.getElementById("questionText");
+const optionsEl = document.getElementById("options");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
+const submitBtn = document.getElementById("submitBtn");
 const resultEl = document.getElementById("result");
+const explanationEl = document.getElementById("explanation");
+const imagesEl = document.getElementById("images");
+const metaEl = document.getElementById("meta");
 
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -20,127 +26,153 @@ function shuffle(array) {
 }
 
 async function loadQuestions() {
-  const res = await fetch(url);
-  const text = await res.text();
-  const rows = text.trim().split("\n").map(r => r.split(","));
+  try {
+    questionTextEl.textContent = "Loading questions from sheet…";
 
-  rows.shift(); // remove headers
+    console.log("Fetching CSV from:", url);
+    const res = await fetch(url);
 
-  QUESTIONS = shuffle(
-    rows.map(r => {
-      const q = {
-        id: r[0],
-        text: r[1],
-        correct: r[2],
-        wrongs: [r[3], r[4], r[5]],
-        category: r[6],
-        explanation: r[7],
-        images: [r[8], r[9], r[10]].filter(Boolean)
-      };
-
-      // Shuffle the answer choices
-      q.choices = shuffle([q.correct, ...q.wrongs]);
-      return q;
-    })
-  );
-
-  answers = new Array(QUESTIONS.length).fill(null);
-  renderQuestion();
-}
-
-function renderQuestion() {
-  if (QUESTIONS.length === 0) return;
-  const q = QUESTIONS[currentIndex];
-  quizEl.innerHTML = `
-    <div class="question">Q${currentIndex+1}: ${q.text}</div>
-    <div class="choices">
-      ${q.choices.map(c => `
-        <label>
-          <input type="radio" name="q${currentIndex}" value="${c}" ${answers[currentIndex] === c ? "checked" : ""}>
-          ${c}
-        </label>
-      `).join("")}
-    </div>
-    <div id="feedback" class="explanation" style="display:none;"></div>
-  `;
-
-  prevBtn.disabled = currentIndex === 0;
-  nextBtn.textContent = currentIndex === QUESTIONS.length-1 ? "Submit" : "Next";
-
-  // Disable Next if no answer yet
-  nextBtn.disabled = answers[currentIndex] === null;
-}
-
-quizEl.addEventListener("change", (e) => {
-  if (e.target.name === `q${currentIndex}`) {
-    answers[currentIndex] = e.target.value;
-
-    const q = QUESTIONS[currentIndex];
-    const feedbackEl = document.getElementById("feedback");
-
-    // Lock all choices after selection
-    document.querySelectorAll(`input[name="q${currentIndex}"]`).forEach(input => {
-      input.disabled = true;
-    });
-
-    if (answers[currentIndex] === q.correct) {
-      feedbackEl.style.display = "block";
-      feedbackEl.innerHTML = `<strong>Correct!</strong>`;
-    } else {
-      feedbackEl.style.display = "block";
-      feedbackEl.innerHTML = `
-        <strong>Incorrect.</strong><br>
-        <strong>Correct Answer:</strong> ${q.correct}<br>
-        <p>${q.explanation || ""}</p>
-        ${q.images.map(img => `<img src="${img}" alt="image for question">`).join("")}
-      `;
+    if (!res.ok) {
+      throw new Error(`HTTP error! Status: ${res.status}`);
     }
 
-    // Enable Next once an answer is chosen
-    nextBtn.disabled = false;
+    const csv = await res.text();
+    console.log("CSV length:", csv.length);
+
+    const parsed = Papa.parse(csv, {
+      header: true,
+      skipEmptyLines: true
+    });
+
+    console.log("Parsed result:", parsed);
+
+    if (parsed.errors && parsed.errors.length > 0) {
+      console.warn("PapaParse errors:", parsed.errors);
+    }
+
+    QUESTIONS = parsed.data;
+
+    if (!QUESTIONS || !QUESTIONS.length) {
+      questionTextEl.textContent = "No questions found in the sheet (check headers & rows).";
+      return;
+    }
+
+    currentIndex = 0;
+    showQuestion();
+  } catch (err) {
+    console.error("Error loading questions:", err);
+    questionTextEl.textContent = "Error loading questions – check the console for details.";
+  }
+}
+
+function showQuestion() {
+  const q = QUESTIONS[currentIndex];
+  if (!q) return;
+
+  // Meta info (Category + Bible Period)
+  const category = q["Category"] || "";
+  const period = q["Bible Period"] || "";
+  metaEl.textContent = [category, period].filter(Boolean).join(" • ");
+
+  // Question text
+  questionTextEl.textContent = q["Question"] || "No question text";
+
+  // Clear previous UI
+  optionsEl.innerHTML = "";
+  explanationEl.textContent = "";
+  imagesEl.innerHTML = "";
+  resultEl.textContent = "";
+
+  // Build answer choices (Correct + 3 Wrong)
+  let answerObjects = [
+    { text: q["Correct Answer"], isCorrect: true },
+    { text: q["Wrong Answer 1"], isCorrect: false },
+    { text: q["Wrong Answer 2"], isCorrect: false },
+    { text: q["Wrong Answer 3"], isCorrect: false }
+  ].filter(a => a.text && a.text.trim() !== "");
+
+  answerObjects = shuffle(answerObjects);
+
+  const savedAnswer = answers[q["ID"]];
+
+  answerObjects.forEach(answerObj => {
+    const label = document.createElement("label");
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "option";
+    radio.value = answerObj.text;
+
+    if (savedAnswer && savedAnswer === answerObj.text) {
+      radio.checked = true;
+    }
+
+    label.appendChild(radio);
+    label.append(" " + answerObj.text);
+    optionsEl.appendChild(label);
+  });
+
+  // Images (if any)
+  ["Image1", "Image2", "Image3"].forEach(key => {
+    const src = q[key];
+    if (src && src.trim() !== "") {
+      const img = document.createElement("img");
+      img.src = src.trim();
+      img.alt = key;
+      imagesEl.appendChild(img);
+    }
+  });
+
+  // Buttons state
+  prevBtn.disabled = currentIndex === 0;
+  nextBtn.disabled = currentIndex === QUESTIONS.length - 1;
+}
+
+function saveAnswer() {
+  const q = QUESTIONS[currentIndex];
+  const selected = document.querySelector("input[name='option']:checked");
+  if (selected) {
+    answers[q["ID"]] = selected.value;
+  }
+}
+
+prevBtn.addEventListener("click", () => {
+  saveAnswer();
+  if (currentIndex > 0) {
+    currentIndex--;
+    showQuestion();
   }
 });
 
 nextBtn.addEventListener("click", () => {
-  if (currentIndex === QUESTIONS.length-1) {
-    showResult();
-  } else {
+  saveAnswer();
+  if (currentIndex < QUESTIONS.length - 1) {
     currentIndex++;
-    renderQuestion();
+    showQuestion();
   }
 });
 
-prevBtn.addEventListener("click", () => {
-  if (currentIndex > 0) {
-    currentIndex--;
-    renderQuestion();
-  }
-});
+submitBtn.addEventListener("click", () => {
+  saveAnswer();
 
-function showResult() {
   let score = 0;
-  let details = "";
-
-  QUESTIONS.forEach((q,i) => {
-    const correct = answers[i] === q.correct;
-    if (correct) score++;
-
-    details += `
-      <div class="explanation">
-        <strong>Q${i+1}:</strong> ${q.text}<br>
-        <strong>Your Answer:</strong> ${answers[i] || "No answer"}<br>
-        <strong>Correct Answer:</strong> ${q.correct}<br>
-        <em>Category:</em> ${q.category}<br>
-        <p>${q.explanation || ""}</p>
-        ${q.images.map(img => `<img src="${img}" alt="image for question">`).join("")}
-      </div>
-    `;
+  QUESTIONS.forEach(q => {
+    const userAnswer = answers[q["ID"]];
+    const correct = q["Correct Answer"];
+    if (userAnswer && correct && userAnswer.trim() === correct.trim()) {
+      score++;
+    }
   });
 
-  quizEl.style.display = "none";
-  document.querySelector(".navigation").style.display = "none";
-  resultEl.style.display = "block";
-  resultEl.innerHTML = `<h2>Your Score: ${score} / ${QUESTIONS.length}</h2>${details}`;
-}
+  resultEl.textContent = `You scored ${score} out of ${QUESTIONS.length}.`;
 
+  const q = QUESTIONS[currentIndex];
+  const expl = q["Explanation"];
+  if (expl && expl.trim() !== "") {
+    explanationEl.textContent = expl;
+  } else {
+    explanationEl.textContent = "";
+  }
+});
+
+// Start it up
 loadQuestions();
